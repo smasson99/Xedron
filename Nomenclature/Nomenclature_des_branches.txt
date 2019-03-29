@@ -1,0 +1,9 @@
+Nomenclature des branches
+Feature: f<numéro de la feauture> ex: "f1"
+Bug: b<numéro de la feauture> ex: "b1"
+Chore: c<numéro de la feauture> ex: "c1"
+Hotfix: h<numéro de la feauture> ex: "h1"
+Release: r<numéro de la feauture> ex: "r1"
+
+Nomenclature des commit messages.
+[<nom de la branche du commit>] <Message> ex: "[f124] Ajout des fonctionnalités qui permettent de manger parce que le joueur a faim"
