@@ -17,7 +17,6 @@ namespace Game
         private bool canMove;
 
         private XboxOneControllerInput xboxOneControllerInput;
-        private ThirdPersonCamera thirdPersonCamera;
 
         private Vector3 leftJoysticDirection;
         private CharacterController characterController;
@@ -85,7 +84,6 @@ namespace Game
         private void GetComponents()
         {
             xboxOneControllerInput = GetComponentInChildren<XboxOneControllerInput>();
-            thirdPersonCamera = Camera.main?.GetComponent<ThirdPersonCamera>();
             characterController = GetComponent<CharacterController>();
             playerAnimator = GetComponentInChildren<PlayerAnimator>();
         }
@@ -101,11 +99,6 @@ namespace Game
             if (xboxOneControllerInput == null)
             {
                 throw new NullReferenceException(nameof(xboxOneControllerInput) + " not found!");
-            }
-
-            if (thirdPersonCamera == null)
-            {
-                throw new NullReferenceException(nameof(thirdPersonCamera) + " not found!");
             }
 
             if (characterController == null)
@@ -148,7 +141,7 @@ namespace Game
 
         private void UpdateRightJoystickDirection(Vector2 direction)
         {
-            thirdPersonCamera.UpdateRightJoysticDirection(direction);
+            //thirdPersonCamera.UpdateRightJoysticDirection(direction);
         }
 
         private bool LeftJoysticIsUsed()
