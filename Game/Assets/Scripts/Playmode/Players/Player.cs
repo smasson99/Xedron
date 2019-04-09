@@ -179,8 +179,8 @@ namespace Game
 
             float movingSpeed = isWalking ? walkSpeed : runSpeed;
 
-            Vector3 movingVector = forwardTransform.TransformDirection(transform.forward);
-            movingVector.y = 0;
+            Vector3 movingVector = forwardTransform.TransformDirection(leftJoysticDirection);
+            //movingVector.y = 0;
 
             characterController.Move(movingVector * movingSpeed *
                                      Time.deltaTime);
