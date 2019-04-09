@@ -142,23 +142,16 @@ namespace Game
         private void SubscribeToXBoxOneControllerInputs()
         {
             xboxOneControllerInput.OnLeftJoystickDirectionChanged += UpdateLeftJoysticDirection;
-            xboxOneControllerInput.OnRightJoystickDirectionChanged += UpdateRightJoystickDirection;
         }
 
         private void UnSubscribeToXBoxOneControllerInputs()
         {
             xboxOneControllerInput.OnLeftJoystickDirectionChanged -= UpdateLeftJoysticDirection;
-            xboxOneControllerInput.OnRightJoystickDirectionChanged -= UpdateRightJoystickDirection;
         }
 
         private void UpdateLeftJoysticDirection(Vector2 direction)
         {
             leftJoysticDirection = new Vector3(direction.x, 0, direction.y);
-        }
-
-        private void UpdateRightJoystickDirection(Vector2 direction)
-        {
-            //thirdPersonCamera.UpdateRightJoysticDirection(direction);
         }
 
         private bool LeftJoysticIsUsed()
@@ -179,10 +172,7 @@ namespace Game
 
             float movingSpeed = isWalking ? walkSpeed : runSpeed;
 
-            Vector3 movingVector = forwardTransform.TransformDirection(leftJoysticDirection);
-            //movingVector.y = 0;
-
-            characterController.Move(movingVector * movingSpeed *
+            characterController.Move(forwardTransform.TransformDirection(leftJoysticDirection) * movingSpeed *
                                      Time.deltaTime);
 
             CurrentPlayerState = isWalking ? PlayerState.Walk : PlayerState.Run;
@@ -202,7 +192,6 @@ namespace Game
         {
             if (LeftJoysticIsUsed())
             {
-                //SetLookRotation(forwardTransform.forward);
                 UpdateVisualRotation(forwardTransform.TransformDirection(leftJoysticDirection));
 
                 Move();
