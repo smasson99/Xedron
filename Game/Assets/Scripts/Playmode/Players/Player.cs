@@ -1,25 +1,42 @@
 ﻿using System;
 using System.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Game
 {
     public class Player : MonoBehaviour
     {
+        [Header("References")]
+        [SerializeField]
+        private GameObject cameraGameObject;
+
+        [SerializeField]
+        private Transform forwardTransform;
+
+        [SerializeField]
+        private Transform visualTransform;
+
+        [Header("Input Settings")]
         [Tooltip("The maximum strength to apply to activate the status IsWalking to the player.")]
         [SerializeField]
         [Range(0, 1)]
         private float isWalkingThreshold = 0.25f;
 
-        [Tooltip("The delay in seconds before moving the player.")] [SerializeField] [Range(0, 2.3f)]
-        private float moveDelayInSeconds = 0;
+        [Header("Configuration")]
+        [Tooltip("The walk speed of the player.")]
+        [SerializeField]
+        [Range(0.01f, 100)]
+        private float walkSpeed = 3.5f;
 
-        private bool canMove;
+        [Tooltip("The run speed of the player.")] [SerializeField] [Range(0.01f, 100)]
+        private float runSpeed = 3.5f;
 
         private XboxOneControllerInput xboxOneControllerInput;
-
         private Vector3 leftJoysticDirection;
+
         private CharacterController characterController;
+        private bool canMove;
 
         private PlayerAnimator playerAnimator;
 
@@ -47,11 +64,6 @@ namespace Game
             }
         }
 
-        [Tooltip("The walk speed of the player.")] [SerializeField] [Range(0.01f, 100)]
-        private float walkSpeed = 3.5f;
-
-        [Tooltip("The run speed of the player.")] [SerializeField] [Range(0.01f, 100)]
-        private float runSpeed = 3.5f;
 
         private void UpdateState()
         {
@@ -106,9 +118,14 @@ namespace Game
                 throw new NullReferenceException(nameof(CharacterController) + "not found!");
             }
 
-            if (characterController == null)
+            if (playerAnimator == null)
             {
                 throw new NullReferenceException(nameof(playerAnimator) + "not found!");
+            }
+
+            if (cameraGameObject is null)
+            {
+                throw new NullReferenceException(nameof(cameraGameObject));
             }
         }
 
@@ -162,7 +179,10 @@ namespace Game
 
             float movingSpeed = isWalking ? walkSpeed : runSpeed;
 
-            characterController.Move(transform.forward * movingSpeed *
+            Vector3 movingVector = forwardTransform.TransformDirection(transform.forward);
+            movingVector.y = 0;
+
+            characterController.Move(movingVector * movingSpeed *
                                      Time.deltaTime);
 
             CurrentPlayerState = isWalking ? PlayerState.Walk : PlayerState.Run;
@@ -173,11 +193,17 @@ namespace Game
             transform.rotation = Quaternion.LookRotation(direction);
         }
 
+        private void UpdateVisualRotation(Vector3 rotation)
+        {
+            visualTransform.rotation = Quaternion.LookRotation(rotation);
+        }
+
         private void Update()
         {
             if (LeftJoysticIsUsed())
             {
-                SetLookRotation(leftJoysticDirection);
+                //SetLookRotation(forwardTransform.forward);
+                UpdateVisualRotation(forwardTransform.TransformDirection(leftJoysticDirection));
 
                 Move();
             }
