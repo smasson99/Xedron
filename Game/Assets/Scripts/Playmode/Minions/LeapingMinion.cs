@@ -14,6 +14,23 @@ public class LeapingMinion : MonoBehaviour
         gravity = Physics.gravity.y;
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.CompareTag("GlobalComponents"))
+        {
+            Debug.Log("Position: " + rigidbody.position);
+            rigidbody.isKinematic = true;
+            Destroy(this);
+        }
+
+    }
+
+    private void Update()
+    {
+
+        //Debug.Log(rigidbody.velocity);
+    }
+
     public void Leap(Vector3 target, float velocity)
     {
         // Find the distance between target and object (u)

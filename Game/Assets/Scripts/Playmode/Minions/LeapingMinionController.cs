@@ -13,6 +13,8 @@ public class LeapingMinionController : MonoBehaviour
         leapingMinions = GameObject.FindGameObjectsWithTag(R.S.Tag.Minion).Select(minionObject => minionObject.GetComponent<LeapingMinion>()).ToArray();
     }
 
+
+
     void Update()
     {
         if(Input.anyKeyDown)
