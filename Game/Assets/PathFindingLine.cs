@@ -8,8 +8,13 @@ public class PathFindingLine : MonoBehaviour
     [SerializeField] public Transform pointATransform;
     [SerializeField] public Transform pointBTransform;
 
-    [SerializeField] public PathFindingZone zone;
     public Line line;
+
+
+
+
+    [SerializeField] public PathFindingZone zone;
+
     public bool generatedLine = false;
     public PathFindingObstacle isObstacleLine;
     public PathFindingZone owner;

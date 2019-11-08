@@ -18,11 +18,12 @@ namespace Assets.Scripts.Playmode.Utils
 
         public float a;
         public float b;
+        //Vertical
         public float? x;
 
         public Vector3 max;
         public Vector3 min;
-        public float magnitude;
+        public float magnitude => vector.magnitude;
 
         public PathFindingLine pathFindingLine;
         public PathFindingZone zone;
@@ -32,26 +33,19 @@ namespace Assets.Scripts.Playmode.Utils
             this.pointA = pointA;
             this.pointB = pointB;
 
-            FindLineEquation(pointA, pointB, out a, out b, out x);
+            InitializeLineEquation();
 
             max = new Vector3(Mathf.Max(pointA.x, pointB.x), 0, Mathf.Max(pointA.z, pointB.z));
             min = new Vector3(Mathf.Min(pointA.x, pointB.x), 0, Mathf.Min(pointA.z, pointB.z));
 
             center = (pointB - pointA) * 0.5f + pointA;
             vector = pointB - pointA;
-
-            magnitude = (pointA - pointB).magnitude;
         }
 
-        public Line Reverse()
+        public void InitializeLineEquation()
         {
-            return new Line(pointB, pointA) { pathFindingLine = this.pathFindingLine, zone = this.zone };
-        }
-
-        public static void FindLineEquation(Vector3 pointA, Vector3 pointb, out float a, out float b, out float? x)
-        {
-            float deltaX = (pointA.x - pointb.x);
-            float deltaY = (pointA.z - pointb.z);
+            float deltaX = (pointA.x - pointB.x);
+            float deltaY = (pointA.z - pointB.z);
 
             if (Mathf.Abs(deltaX) < float.Epsilon)
             {
@@ -66,6 +60,12 @@ namespace Assets.Scripts.Playmode.Utils
             x = null;
         }
 
+
+        public Line Reverse()
+        {
+            return new Line(pointB, pointA) { pathFindingLine = this.pathFindingLine, zone = this.zone };
+        }
+
         public Line GetPerpendicularLine()
         {
             return new Line(new Vector3(-(pointA - center).z, 0, (pointA - center).x) + center, new Vector3(-(pointB - center).z, 0, (pointB - center).x) + center);
@@ -73,7 +73,30 @@ namespace Assets.Scripts.Playmode.Utils
 
         public float AngleBetweenLine(Line line)
         {
-            return Mathf.Acos(Vector3.Dot(pointB - pointA, line.pointB - line.pointA) / (magnitude * line.magnitude)) * Mathf.Rad2Deg;
+            if(IsLinked(line) == -1)
+                return Mathf.Acos(Vector3.Dot(vector, line.vector) / (magnitude * line.magnitude)) * Mathf.Rad2Deg;
+            else
+                return Mathf.Acos(Vector3.Dot(vector, -line.vector) / (magnitude * line.magnitude)) * Mathf.Rad2Deg;
+        }
+
+        public int IsLinked(Line line)
+        {
+            return pointA.IsEquals(line.pointB) ? 1 : pointB.IsEquals(line.pointA) ? -1 : 0;
+        }
+
+        public bool IsEquals(Line line)
+        {
+            return pointA.IsEquals(line.pointA) && pointB.IsEquals(line.pointB);
+        }
+
+        public bool IsReverse(Line line)
+        {
+            return pointA.IsEquals(line.pointB) && pointB.IsEquals(line.pointA);
+        }
+
+        public bool IsEqualsOrReverse(Line line)
+        {
+            return (pointA.IsEquals(line.pointA) && pointB.IsEquals(line.pointB)) || (pointA.IsEquals(line.pointB) && pointB.IsEquals(line.pointA));
         }
 
         public bool IsInRange(Vector3 point)

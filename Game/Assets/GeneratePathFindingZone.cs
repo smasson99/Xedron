@@ -8,10 +8,12 @@ using UnityEngine;
 
 class GeneratePathFindingObject
 {
+    static int countLineAdded = 0;
+
     [MenuItem("Tools/PathFinding/Generate")]
     private static void GeneratePathFindingZones()
     {
-        int countLineAdded = 0;
+
 
         List<PathFindingObstacle> obstacles = GameObject.FindGameObjectsWithTag(R.S.Tag.PathFindingZoneObstacle).Select(x => x.GetComponent<PathFindingObstacle>()).ToList();
         List<PathFindingLine> boundingLine = GameObject.FindGameObjectsWithTag(R.S.Tag.PathFindingBoundingLine).Select(x => x.GetComponent<PathFindingLine>()).ToList();
@@ -21,74 +23,7 @@ class GeneratePathFindingObject
         List<Transform> allPointsTransform = GameObject.FindGameObjectsWithTag(R.S.Tag.PathFindingPoint).Select(x => x.transform).ToList();
         allLines.AddRange(boundingLine);
 
-        foreach (PathFindingObstacle obstacle in obstacles)
-        {
-            for (int i = 0; i < obstacle.points.Count; i++)
-            {
-                for (int j = i + 1; j < obstacle.points.Count; j++)
-                {
-                    Line lineToAnalyse = new Line(obstacle.points[i], obstacle.points[j]);
-
-                    int? resultPoint = null;
-                    bool allPointsSameSide = true;
-                    foreach (Vector3 point in obstacle.points)
-                    {
-                        if (!point.IsEquals(lineToAnalyse.pointA) && !point.IsEquals(lineToAnalyse.pointB))
-                        {
-                            int resultCrossProduct = Math.Sign(Vector3.Cross(lineToAnalyse.vector, point - lineToAnalyse.pointA).y);
-
-                            if (resultPoint == null)
-                                resultPoint = resultCrossProduct;
-
-                            if (resultPoint != resultCrossProduct)
-                            {
-                                allPointsSameSide = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (allPointsSameSide)
-                    {
-                        bool lineAlreadyExist = false;
-                        foreach (PathFindingLine line in obstacle.lines)
-                        {
-                            if ((lineToAnalyse.pointA.IsEquals(line.line.pointA) || lineToAnalyse.pointA.IsEquals(line.line.pointB)) && (lineToAnalyse.pointB.IsEquals(line.line.pointA) || lineToAnalyse.pointB.IsEquals(line.line.pointB)))
-                            {
-                                lineAlreadyExist = true;
-                                break;
-                            }
-                        }
-
-                        if (!lineAlreadyExist)
-                        {
-                            Debug.DrawLine(lineToAnalyse.pointA, lineToAnalyse.pointB, Color.cyan);
-
-                            GameObject gameObject = new GameObject();
-                            gameObject.name = countLineAdded.ToString();
-                            PathFindingLine pathFindingLine = gameObject.AddComponent<PathFindingLine>();
-
-                            Transform pointA = allPointsTransform.First(x => x.transform.position.IsEquals(lineToAnalyse.pointA));
-                            Transform pointB = allPointsTransform.First(x => x.transform.position.IsEquals(lineToAnalyse.pointB));
-
-                            pathFindingLine.pointATransform = pointA;
-                            pathFindingLine.pointBTransform = pointB;
-                            pathFindingLine.generatedLine = true;
-
-                            pathFindingLine.Initialize();
-
-                            countLineAdded++;
-
-                            allLines.Add(pathFindingLine);
-                        }
-                    }
-                }
-            }
-
-            obstacle.lines.ForEach(x => x.Initialize());
-            obstacle.Initialize();
-            allLines.AddRange(obstacle.lines);
-        }
+        AddObstaclesInformation(obstacles, allLines, allPoints, allPointsTransform);
 
         foreach (PathFindingLine line in boundingLine)
         {
@@ -98,9 +33,6 @@ class GeneratePathFindingObject
             if (boundingPoints.FindIndex(x => x.IsEquals(line.pointBTransform.position)) == -1)
                 boundingPoints.Add(line.pointBTransform.position);
         }
-
-        foreach (PathFindingObstacle obstacle in obstacles)
-            allPoints.AddRange(obstacle.points);
 
         allPoints.AddRange(boundingPoints);
 
@@ -324,15 +256,86 @@ class GeneratePathFindingObject
                             }
                         }
                     }
-                    else
-                    {
-                        //throw new Exception();
-                    }
                 }
             }
         }
 
         CreateZones(countLineAdded, obstacles, allLines, allPointsTransform);
+    }
+
+    private static void AddObstaclesInformation(List<PathFindingObstacle> obstacles, List<PathFindingLine> allLines, List<Vector3> allPoints, List<Transform> allPointsTransform)
+    {
+        foreach (PathFindingObstacle obstacle in obstacles)
+        {
+            for (int i = 0; i < obstacle.points.Count; i++)
+            {
+                for (int j = i + 1; j < obstacle.points.Count; j++)
+                {
+                    Line lineToAnalyse = new Line(obstacle.points[i], obstacle.points[j]);
+
+                    int? resultPoint = null;
+                    bool allPointsSameSide = true;
+                    foreach (Vector3 point in obstacle.points)
+                    {
+                        if (!point.IsEquals(lineToAnalyse.pointA) && !point.IsEquals(lineToAnalyse.pointB))
+                        {
+                            int resultCrossProduct = Math.Sign(Vector3.Cross(lineToAnalyse.vector, point - lineToAnalyse.pointA).y);
+
+                            if (resultPoint == null)
+                                resultPoint = resultCrossProduct;
+
+                            if (resultPoint != resultCrossProduct)
+                            {
+                                allPointsSameSide = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (allPointsSameSide)
+                    {
+                        bool lineAlreadyExist = false;
+                        foreach (PathFindingLine line in obstacle.lines)
+                        {
+                            if (lineToAnalyse.IsEqualsOrReverse(line.line))
+                            {
+                                lineAlreadyExist = true;
+                                break;
+                            }
+                        }
+
+                        if (!lineAlreadyExist)
+                        {
+                            Debug.DrawLine(lineToAnalyse.pointA, lineToAnalyse.pointB, Color.cyan);
+
+                            GameObject gameObject = new GameObject();
+                            gameObject.name = countLineAdded.ToString();
+                            PathFindingLine pathFindingLine = gameObject.AddComponent<PathFindingLine>();
+
+                            Transform pointA = allPointsTransform.First(x => x.transform.position.IsEquals(lineToAnalyse.pointA));
+                            Transform pointB = allPointsTransform.First(x => x.transform.position.IsEquals(lineToAnalyse.pointB));
+
+                            pathFindingLine.pointATransform = pointA;
+                            pathFindingLine.pointBTransform = pointB;
+                            pathFindingLine.generatedLine = true;
+
+                            pathFindingLine.Initialize();
+
+                            countLineAdded++;
+
+                            allLines.Add(pathFindingLine);
+                        }
+                    }
+                }
+            }
+
+            obstacle.lines.ForEach(x => x.Initialize());
+            obstacle.Initialize();
+            allLines.AddRange(obstacle.lines);
+        }
+
+        foreach (PathFindingObstacle obstacle in obstacles)
+            allPoints.AddRange(obstacle.points);
     }
 
     private static int CreateZones(int countLineAdded, List<PathFindingObstacle> obstacles, List<PathFindingLine> allLines, List<Transform> allPointsTransform)
@@ -434,16 +437,16 @@ class GeneratePathFindingObject
                     foreach (PathFindingLine line in zone.Lines)
                     {
                         bool lineAlreadyAdd = false;
-                        foreach(PathFindingLine lineMightAlreadyAdded in currentZone.Lines)
+                        foreach (PathFindingLine lineMightAlreadyAdded in currentZone.Lines)
                         {
-                            if((lineMightAlreadyAdded.line.pointA.IsEquals(line.line.pointA) && lineMightAlreadyAdded.line.pointB.IsEquals(line.line.pointB)) || (lineMightAlreadyAdded.line.pointA.IsEquals(line.line.pointB) && lineMightAlreadyAdded.line.pointB.IsEquals(line.line.pointA)))
+                            if ((lineMightAlreadyAdded.line.pointA.IsEquals(line.line.pointA) && lineMightAlreadyAdded.line.pointB.IsEquals(line.line.pointB)) || (lineMightAlreadyAdded.line.pointA.IsEquals(line.line.pointB) && lineMightAlreadyAdded.line.pointB.IsEquals(line.line.pointA)))
                             {
                                 lineAlreadyAdd = true;
                                 break;
                             }
                         }
 
-                        if(!lineAlreadyAdd)
+                        if (!lineAlreadyAdd)
                         {
                             if (line != currentLine && line.line.pointA.IsEquals(currentLine.line.pointB) && !line.line.pointB.IsEquals(currentLine.line.pointA))
                             {
@@ -457,14 +460,7 @@ class GeneratePathFindingObject
                     }
                 }
 
-                lines.Sort(delegate (Line x, Line y)
-                {
-                    Line reverseCurrentLine = currentLine.line.Reverse();
-
-                    float angleBetween1 = x.AngleBetweenLine(reverseCurrentLine);
-                    float angleBetween2 = y.AngleBetweenLine(reverseCurrentLine);
-                    return (int)(angleBetween1 - angleBetween2);
-                });
+                SortLineByAcuteAngle(currentLine, lines);
 
                 foreach (Line line in lines)
                 {
@@ -491,7 +487,7 @@ class GeneratePathFindingObject
                                 lineToCheck = new Line(lineInObstacles.line.pointA, lineInObstacles.line.pointB);
                             }
 
-                            if((lineToAnalyze.pointA.IsEquals(lineInObstacles.line.pointA) || lineToAnalyze.pointA.IsEquals(lineInObstacles.line.pointB)) && (lineToAnalyze.pointB.IsEquals(lineInObstacles.line.pointA) || lineToAnalyze.pointB.IsEquals(lineInObstacles.line.pointB)))
+                            if ((lineToAnalyze.pointA.IsEquals(lineInObstacles.line.pointA) || lineToAnalyze.pointA.IsEquals(lineInObstacles.line.pointB)) && (lineToAnalyze.pointB.IsEquals(lineInObstacles.line.pointA) || lineToAnalyze.pointB.IsEquals(lineInObstacles.line.pointB)))
                             {
                                 lineToAnalyze = new Line(lineInObstacles.line.pointA, lineInObstacles.line.pointB);
                             }
@@ -710,6 +706,11 @@ class GeneratePathFindingObject
         }
 
         return countLineAdded;
+    }
+
+    private static void SortLineByAcuteAngle(PathFindingLine currentLine, List<Line> lines)
+    {
+        lines.Sort((lineA, lineB) => (int)(lineA.AngleBetweenLine(currentLine.line) - lineB.AngleBetweenLine(currentLine.line)));
     }
 }
 
